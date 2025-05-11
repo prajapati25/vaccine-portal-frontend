@@ -1,3 +1,7 @@
+/**
+ * Main application component that sets up routing and authentication
+ * Uses React Router for navigation and AuthContext for authentication state
+ */
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
@@ -13,11 +17,17 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
+    // Wrap entire app with AuthProvider for authentication context
     <AuthProvider>
      <Router>
       <Routes>
+        {/* Redirect root to dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" />} />
+        
+        {/* Public route for login */}
         <Route path="/login" element={<Login />} />
+        
+        {/* Protected routes requiring authentication */}
         <Route 
           path="/dashboard" 
           element={
@@ -26,6 +36,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Student management routes */}
         <Route 
           path="/students" 
           element={
@@ -34,6 +46,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Vaccination drive management routes */}
         <Route 
           path="/drives" 
           element={
@@ -42,6 +56,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Add new vaccination drive */}
         <Route 
           path="/drives/add" 
           element={
@@ -50,6 +66,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Edit existing vaccination drive */}
         <Route 
           path="/drives/edit/:id" 
           element={
@@ -58,6 +76,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Reports and analytics */}
         <Route 
           path="/reports" 
           element={

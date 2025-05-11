@@ -17,12 +17,10 @@ const StudentList = ({
   const [vaccinationStatus, setVaccinationStatus] = useState({});
   const [availableDrives, setAvailableDrives] = useState([]);
 
-  // Handle vaccine selection change
   const handleVaccineChange = async (e, studentId) => {
     const vaccineId = e.target.value;
     setSelectedVaccine(vaccineId);
     
-    // Clear previous status
     setVaccinationStatus({
       ...vaccinationStatus,
       [studentId]: {
@@ -32,12 +30,10 @@ const StudentList = ({
       }
     });
     
-    // Reset drive selection
     setSelectedDrive("");
     
     if (vaccineId) {
       try {
-        // Fetch available drives for this vaccine
         const response = await fetch(`/api/drives?vaccineId=${vaccineId}`);
         const data = await response.json();
         setAvailableDrives(data || []);
@@ -49,7 +45,6 @@ const StudentList = ({
     }
   };
 
-  // Handle vaccination submission
   const handleVaccinate = async (studentId) => {
     if (!selectedVaccine || !selectedDrive) {
       setVaccinationStatus({
@@ -63,7 +58,6 @@ const StudentList = ({
       return;
     }
     
-    // Set loading state
     setVaccinationStatus({
       ...vaccinationStatus,
       [studentId]: {
@@ -96,7 +90,6 @@ const StudentList = ({
           }
         });
         
-        // Reset selections after success
         setSelectedVaccine("");
         setSelectedDrive("");
         setAvailableDrives([]);
@@ -227,7 +220,6 @@ const StudentList = ({
       </table>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
