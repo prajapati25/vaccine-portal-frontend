@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { API_ENDPOINTS } from '../constants/apiEndpoints';
+import { API_ENDPOINTS } from '../api/axios';
 
 const VaccinationDriveManagement = () => {
   const [formData, setFormData] = useState({
-    vaccineName: '',
+    vaccine: {
+      id: ''
+    },
+    vaccineBatch: '',
     driveDate: '',
     availableDoses: '',
     applicableGrades: '',
     minimumAge: '',
     maximumAge: '',
+    status: 'SCHEDULED',
+    isActive: true,
     notes: ''
   });
   const [editingDrive, setEditingDrive] = useState(null);
@@ -23,30 +28,40 @@ const VaccinationDriveManagement = () => {
 
     try {
       const driveData = {
-        vaccineName: formData.vaccineName,
+        vaccine: {
+          id: parseInt(formData.vaccine.id)
+        },
+        vaccineBatch: formData.vaccineBatch,
         driveDate: formData.driveDate,
         availableDoses: parseInt(formData.availableDoses),
-        applicableGrades: formData.applicableGrades.split(',').map(g => g.trim()),
+        applicableGrades: formData.applicableGrades,
         minimumAge: parseInt(formData.minimumAge),
         maximumAge: parseInt(formData.maximumAge),
+        status: formData.status,
+        isActive: formData.isActive,
         notes: formData.notes
       };
 
       if (editingDrive) {
-        await axios.put(`${API_ENDPOINTS.VACCINATION_DRIVES}/${editingDrive.id}`, driveData);
+        await axios.put(API_ENDPOINTS.DRIVE_BY_ID(editingDrive.id), driveData);
         setSuccess('Vaccination drive updated successfully');
       } else {
-        await axios.post(API_ENDPOINTS.VACCINATION_DRIVES, driveData);
+        await axios.post(API_ENDPOINTS.DRIVES, driveData);
         setSuccess('Vaccination drive created successfully');
       }
 
       setFormData({
-        vaccineName: '',
+        vaccine: {
+          id: ''
+        },
+        vaccineBatch: '',
         driveDate: '',
         availableDoses: '',
         applicableGrades: '',
         minimumAge: '',
         maximumAge: '',
+        status: 'SCHEDULED',
+        isActive: true,
         notes: ''
       });
       setEditingDrive(null);
@@ -65,12 +80,17 @@ const VaccinationDriveManagement = () => {
 
     setEditingDrive(drive);
     setFormData({
-      vaccineName: drive.vaccineName,
+      vaccine: {
+        id: drive.vaccine.id
+      },
+      vaccineBatch: drive.vaccineBatch,
       driveDate: drive.driveDate.split('T')[0],
       availableDoses: drive.availableDoses.toString(),
       applicableGrades: drive.applicableGrades.join(', '),
       minimumAge: drive.minimumAge.toString(),
       maximumAge: drive.maximumAge.toString(),
+      status: drive.status,
+      isActive: drive.isActive,
       notes: drive.notes || ''
     });
   };

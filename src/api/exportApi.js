@@ -1,16 +1,15 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+import axiosInstance from './axios';
+import { API_ENDPOINTS } from './axios';
 
 export const exportApi = {
     exportToCsv: async (filters) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/exports/csv`, {
-                params: filters,
-                responseType: 'blob',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+            const response = await axiosInstance.get(API_ENDPOINTS.VACCINATION_RECORDS_EXPORT, {
+                params: {
+                    ...filters,
+                    format: 'csv'
+                },
+                responseType: 'blob'
             });
             
             // Create a download link and trigger it
@@ -32,12 +31,12 @@ export const exportApi = {
 
     exportToPdf: async (filters) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/exports/pdf`, {
-                params: filters,
-                responseType: 'blob',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+            const response = await axiosInstance.get(API_ENDPOINTS.VACCINATION_RECORDS_EXPORT, {
+                params: {
+                    ...filters,
+                    format: 'pdf'
+                },
+                responseType: 'blob'
             });
             
             // Create a download link and trigger it

@@ -53,10 +53,18 @@ const StudentManagement = () => {
       if (filters.grade) {
         params.append('grade', filters.grade);
       }
+      if (filters.section) {
+        params.append('section', filters.section);
+      }
+      if (filters.vaccinationStatus) {
+        params.append('vaccinationStatus', filters.vaccinationStatus);
+      }
+      if (filters.gender) {
+        params.append('gender', filters.gender);
+      }
 
       const response = await axios.get(`${API_ENDPOINTS.STUDENTS}?${params.toString()}`);
       
-      // Handle paginated response
       if (response.data && response.data.content) {
         setStudents(response.data.content);
         setTotalPages(response.data.totalPages);
@@ -82,7 +90,7 @@ const StudentManagement = () => {
 
       let response;
       if (selectedStudent) {
-        response = await axios.put(`/api/students/${selectedStudent.id}`, studentData);
+        response = await axios.put(`/students/${selectedStudent.id}`, studentData);
       } else {
         response = await axios.post("/students", studentData);
       }
@@ -292,7 +300,7 @@ const StudentManagement = () => {
       {showForm && (
         <StudentForm
           student={selectedStudent}
-          onClose={() => {
+          onCancel={() => {
             setShowForm(false);
             setSelectedStudent(null);
             setError(null);

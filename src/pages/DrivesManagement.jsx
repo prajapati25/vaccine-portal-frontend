@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Plus, Edit, AlertCircle, Check, X, Clock, Loader, Trash2, Info } from "lucide-react";
 import axios, { API_ENDPOINTS } from "../api/axios";
@@ -120,10 +120,17 @@ const DrivesManagement = () => {
   const handleDeleteDrive = async (driveId) => {
     if (window.confirm("Are you sure you want to delete this vaccination drive?")) {
       try {
+        setLoading(true);
         await axios.delete(API_ENDPOINTS.DRIVE_BY_ID(driveId));
-        fetchDrives(); // Refresh the list
-      } catch (err) {
-        console.error("Failed to delete drive", err);
+        // Show success message
+        setError(null);
+        // Refresh the drives list
+        await fetchDrives();
+      } catch (error) {
+        console.error("Failed to delete drive:", error);
+        setError(error.response?.data?.message || "Failed to delete vaccination drive");
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -178,7 +185,10 @@ const DrivesManagement = () => {
         availableDoses: driveData.availableDoses,
         applicableGrades: driveData.targetClasses.join(','),
         status: "SCHEDULED",
-        isActive: true
+        isActive: true,
+        vaccineBatch: driveData.vaccineBatch,
+        minimumAge: driveData.minimumAge ? parseInt(driveData.minimumAge) : null,
+        notes: driveData.notes || null
       };
 
       if (driveData.id) {
@@ -261,23 +271,33 @@ const DrivesManagement = () => {
   const fetchDriveRecords = async (driveId) => {
     try {
       // If records are already shown for this drive, hide them
-      if (selectedDriveRecords.length > 0 && selectedDriveRecords[0].vaccinationDriveId === driveId) {
+      if (selectedDriveRecords.length > 0 && selectedDriveRecords[0].driveId === driveId) {
         setSelectedDriveRecords([]);
         return;
       }
 
       setLoadingRecords(true);
-      const response = await axios.get(`/vaccination-drives/${driveId}/records`);
-      // Handle paginated response for records
+      // Get the vaccination records for this drive
+      const response = await axios.get(`/vaccination-records/drive/${driveId}`);
+      
       if (response.data && response.data.content) {
+        // Set the records from the content array
         setSelectedDriveRecords(response.data.content);
+        // Update pagination info if needed
+        setTotalElements(response.data.totalElements);
+        setTotalPages(response.data.totalPages);
       } else {
         setSelectedDriveRecords([]);
+        setTotalElements(0);
+        setTotalPages(0);
       }
     } catch (error) {
-      console.error("Failed to fetch drive records", error);
+      console.error("Failed to fetch drive records:", error);
+      console.error("Error details:", error.response?.data);
       setError("Failed to load vaccination records");
       setSelectedDriveRecords([]);
+      setTotalElements(0);
+      setTotalPages(0);
     } finally {
       setLoadingRecords(false);
     }
@@ -339,10 +359,11 @@ const DrivesManagement = () => {
               {drives.map((drive) => {
                 const isPast = isPastDrive(drive.driveDate);
                 const status = getDriveStatus(drive);
+                const isShowingRecords = selectedDriveRecords.length > 0 && selectedDriveRecords[0].driveId === drive.id;
                 
                 return (
-                  <>
-                    <tr key={drive.id} className="hover:bg-gray-50">
+                  <React.Fragment key={drive.id}>
+                    <tr className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{drive.vaccine?.name || 'Unknown Vaccine'}</div>
                         <div className="text-sm text-gray-500">Batch: {drive.vaccineBatch || 'N/A'}</div>
@@ -367,7 +388,7 @@ const DrivesManagement = () => {
                           <button
                             onClick={() => fetchDriveRecords(drive.id)}
                             className={`px-3 py-1 text-sm rounded-md transition ${
-                              selectedDriveRecords.length > 0 && selectedDriveRecords[0].vaccinationDriveId === drive.id
+                              isShowingRecords
                                 ? 'bg-blue-600 text-white'
                                 : 'text-white'
                             }`}
@@ -375,9 +396,7 @@ const DrivesManagement = () => {
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(96, 100, 97)'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(116, 120, 117)'}
                           >
-                            {selectedDriveRecords.length > 0 && selectedDriveRecords[0].vaccinationDriveId === drive.id
-                              ? 'Hide Records'
-                              : 'View Records'}
+                            {isShowingRecords ? 'Hide Records' : 'View Records'}
                           </button>
                           
                           {isPast ? (
@@ -418,18 +437,20 @@ const DrivesManagement = () => {
                         </div>
                       </td>
                     </tr>
-                    {selectedDriveRecords.length > 0 && selectedDriveRecords[0].vaccinationDriveId === drive.id && (
+                    {isShowingRecords && (
                       <tr>
                         <td colSpan="6" className="px-6 py-4 bg-gray-50">
                           <div className="rounded-lg border border-gray-200 bg-white">
                             <div className="p-4 border-b border-gray-200">
-                              <h4 className="text-sm font-medium text-gray-700">Vaccination Records ({selectedDriveRecords.length})</h4>
+                              <h4 className="text-sm font-medium text-gray-700">
+                                Vaccination Records ({selectedDriveRecords.length} records)
+                              </h4>
                             </div>
                             {loadingRecords ? (
                               <div className="text-center py-4">
                                 <Loader className="animate-spin text-blue-600 mx-auto" size={16} />
                               </div>
-                            ) : (
+                            ) : selectedDriveRecords.length > 0 ? (
                               <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
                                   <thead className="bg-gray-50">
@@ -471,12 +492,16 @@ const DrivesManagement = () => {
                                   </tbody>
                                 </table>
                               </div>
+                            ) : (
+                              <div className="text-center py-4 text-gray-500">
+                                No vaccination records found for this drive.
+                              </div>
                             )}
                           </div>
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })}
             </tbody>

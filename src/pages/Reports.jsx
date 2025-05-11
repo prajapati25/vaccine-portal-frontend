@@ -41,15 +41,25 @@ const Reports = () => {
       setLoading(true);
       setError(null);
       
+      // Convert filters to query parameters
       const params = new URLSearchParams({
         page: page,
-        size: 10,
-        ...filters
+        size: 10
       });
 
+      // Add filters only if they have values
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
+      if (filters.vaccine) params.append('vaccineName', filters.vaccine);
+      if (filters.grade) params.append('grade', filters.grade);
+      if (filters.status) params.append('status', filters.status);
+
       const response = await axios.get(`${API_ENDPOINTS.VACCINATION_RECORDS}?${params}`);
-      setRecords(response.data.content);
-      setTotalPages(response.data.totalPages);
+      
+      if (response.data) {
+        setRecords(response.data.content || []);
+        setTotalPages(response.data.totalPages || 0);
+      }
     } catch (error) {
       console.error("Failed to fetch records", error);
       setError("Failed to load vaccination records. Please try again later.");
@@ -60,7 +70,7 @@ const Reports = () => {
 
   const fetchVaccines = async () => {
     try {
-      const response = await axios.get('/api/vaccines');
+      const response = await axios.get('/vaccines');
       setAvailableVaccines(response.data);
     } catch (error) {
       console.error("Failed to fetch vaccines", error);
@@ -69,7 +79,7 @@ const Reports = () => {
 
   const fetchGrades = async () => {
     try {
-      const response = await axios.get('/api/grades');
+      const response = await axios.get('/grades');
       setAvailableGrades(response.data);
     } catch (error) {
       console.error("Failed to fetch grades", error);
@@ -104,15 +114,6 @@ const Reports = () => {
         status: filters.status
       };
 
-      // Validate date range if both dates are provided
-      if (apiFilters.startDate && apiFilters.endDate) {
-        const start = new Date(apiFilters.startDate);
-        const end = new Date(apiFilters.endDate);
-        if (start > end) {
-          throw new Error('Start date cannot be after end date');
-        }
-      }
-
       if (format === 'csv') {
         await exportApi.exportToCsv(apiFilters);
       } else if (format === 'pdf') {
@@ -138,8 +139,6 @@ const Reports = () => {
           default:
             errorMessage = `Server error (${error.response.status}). Please try again later.`;
         }
-      } else if (error.message) {
-        errorMessage = error.message;
       }
       
       setExportStatus({
@@ -172,14 +171,24 @@ const Reports = () => {
         <div className="flex justify-end mb-6">
           <div className="flex space-x-4">
             <button
-              onClick={handleExport}
+              onClick={() => handleExport('csv')}
               className="px-4 py-2 text-white rounded-md flex items-center transition-colors duration-200"
               style={{ backgroundColor: 'rgb(116, 120, 117)' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(96, 100, 97)'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(116, 120, 117)'}
             >
               <Download className="w-4 h-4 mr-2" />
-              Export Report
+              Export CSV
+            </button>
+            <button
+              onClick={() => handleExport('pdf')}
+              className="px-4 py-2 text-white rounded-md flex items-center transition-colors duration-200"
+              style={{ backgroundColor: 'rgb(116, 120, 117)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(96, 100, 97)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgb(116, 120, 117)'}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export PDF
             </button>
           </div>
         </div>

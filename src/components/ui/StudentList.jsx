@@ -184,12 +184,12 @@ const StudentList = ({
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
                   className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    student.isVaccinated
+                    student.hasVaccinationRecords
                       ? "bg-green-100 text-green-800"
                       : "bg-red-100 text-red-800"
                   }`}
                 >
-                  {student.isVaccinated ? "Vaccinated" : "Not Vaccinated"}
+                  {student.hasVaccinationRecords ? "Vaccinated" : "Not Vaccinated"}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

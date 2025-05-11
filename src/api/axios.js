@@ -69,12 +69,9 @@ export const API_ENDPOINTS = {
     VACCINATION_RECORD_BY_ID: (id) => `/vaccination-records/${id}`,
     VACCINATION_RECORDS_BY_STUDENT: (studentId) => `/vaccination-records/student/${studentId}`,
     VACCINATION_RECORDS_BY_STUDENT_STATUS: (studentId, status) => `/vaccination-records/student/${studentId}/status/${status}`,
-    VACCINATION_RECORDS_EXPORT: '/vaccination-records/export',
+    VACCINATION_RECORDS_EXPORT: '/vaccination-records/report/export',
     
-    // Appointments
-    APPOINTMENTS: '/appointments',
-    APPOINTMENT_BY_ID: (id) => `/appointments/${id}`,
-    
+
     // Dashboard
     DASHBOARD: {
         STUDENT_COUNT: '/dashboard/students/count',

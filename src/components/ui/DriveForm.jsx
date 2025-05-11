@@ -15,7 +15,9 @@ const DriveForm = ({
     date: "",
     availableDoses: 0,
     targetClasses: [],
-    vaccineBatch: ""
+    vaccineBatch: "",
+    minimumAge: "",
+    notes: ""
   });
   const [errors, setErrors] = useState({});
   const [submissionError, setSubmissionError] = useState("");
@@ -52,14 +54,26 @@ const DriveForm = ({
         formattedDate = new Date().toISOString().split('T')[0];
       }
       
+      // Handle target classes - convert string to array of numbers
+      let targetClassesArray = [];
+      if (drive.applicableGrades) {
+        if (typeof drive.applicableGrades === 'string') {
+          targetClassesArray = drive.applicableGrades.split(',').map(grade => parseInt(grade.trim()));
+        } else if (Array.isArray(drive.applicableGrades)) {
+          targetClassesArray = drive.applicableGrades.map(grade => parseInt(grade));
+        }
+      }
+      
       setFormData({
         id: drive.id,
         vaccineId: drive.vaccineId || "",
         vaccineName: drive.vaccineName || "",
         date: formattedDate,
         availableDoses: drive.availableDoses || 0,
-        targetClasses: Array.isArray(drive.targetClasses) ? [...drive.targetClasses] : [],
-        vaccineBatch: drive.vaccineBatch || ""
+        targetClasses: targetClassesArray,
+        vaccineBatch: drive.vaccineBatch || "",
+        minimumAge: drive.minimumAge || "",
+        notes: drive.notes || ""
       });
     }
   }, [drive]);
@@ -275,6 +289,39 @@ const DriveForm = ({
             {errors.availableDoses && (
               <p className="mt-1 text-sm text-red-600">{errors.availableDoses}</p>
             )}
+          </div>
+          
+          {/* Minimum Age */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Minimum Age
+            </label>
+            <input
+              type="number"
+              name="minimumAge"
+              value={formData.minimumAge}
+              onChange={handleChange}
+              min="0"
+              disabled={isSubmitting}
+              placeholder="Enter minimum age requirement"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          {/* Notes */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notes
+            </label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              placeholder="Enter any additional notes or instructions"
+              rows="3"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
           
           {/* Target Classes */}
